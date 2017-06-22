@@ -44,7 +44,30 @@ sensor_msgs::Image g_rgb;
 sensor_msgs::Image g_depth;
 sensor_msgs::LaserScan g_scan;
 cv::Mat g_display;
-int g_distance;
+int g_totaldistance;
+double g_preX;
+double g_preY;
+
+ros::Subscriber g_subOdom;
+ros::Subscriber g_subMap;
+ros::Subscriber g_subRgb;
+ros::Subscriber g_subDepth;
+ros::Subscriber g_subScan;
+
+ros::Publisher g_pubGeo;
+
+
+
+void odomMsgCallback(const nav_msgs::Odometry &msg);
+void occupancyGrid_Callback(const nav_msgs::OccupancyGrid &msg);
+void poseMessageReceivedRGB(const sensor_msgs::Image& msg);
+void poseMessageReceivedDepthRaw(const sensor_msgs::Image& msg);
+void scanMsgCallback(const sensor_msgs::LaserScan& msg);
+void error_Handle(std::string message);
+double distancelimit();
+int depthCheck_depth();
+int randomMove();
+int calc_distance();
 
 void odomMsgCallback(const nav_msgs::Odometry &msg)
 {
@@ -83,9 +106,9 @@ void error_Handle(std::string message)
   exit(1);
 }
 
-int distancelimit() //거리입력
+double distancelimit() //거리입력
 {
-    int return_value = 0;
+    double return_value = 0;
 
     std::cout << "Input exit distance (>1 Meter) : ";
     std::cin >> return_value;
@@ -130,6 +153,78 @@ int depthCheck_depth()  //1 is block , 0 is nonblock
   return blockandnonblock;
 }
 
+int randomMove()
+{
+  geometry_msgs::Twist geo_msg;
 
+  if(depthCheck_depth())  //장애물 있을 때.
+  {
+    nav_msgs::Odometry msg;
+
+  //  while(1)
+    //{
+      mutex[0].lock(); {
+         msg = g_odom;
+      } mutex[0].unlock();
+
+      double angle = atan2((2*msg.pose.pose.orientation.w*msg.pose.pose.orientation.z),(1-2*msg.pose.pose.orientation.z*msg.pose.pose.orientation.z));
+
+      geo_msg.linear.x = 0;
+      geo_msg.angular.z = 1;
+      g_pubGeo.publish(geo_msg);
+
+      calc_distance();
+      /*
+      if(angle == ??)
+      {
+        break;
+      }
+
+      if(>)
+      {
+  		  geo_msg.linear.x = 0;
+  		  geo_msg.angular.z = 0.5;
+        g_pubGeo.publish(geo_msg);
+      }
+      else if(<)
+      {
+        geo_msg.linear.x = 0;
+  		  geo_msg.angular.z = -0.5;
+        g_pubGeo.publish(geo_msg);
+      }
+      */
+    //}
+  }
+  else  //장애물 없을 때.
+  {
+    geo_msg.linear.x = 0.5;
+    geo_msg.angular.z = 0;
+    g_pubGeo.publish(geo_msg);
+  }
+
+  return 0;
+}
+
+int calc_distance()
+{
+  nav_msgs::Odometry msg;
+  double x1,y1;
+
+  mutex[0].lock(); {
+     msg = g_odom;
+  } mutex[0].unlock();
+
+  x1 = msg.pose.pose.position.x;
+	y1 = msg.pose.pose.position.y;
+
+  double distance = sqrt(pow((x1-g_preX),2.0)+pow((y1-g_preY),2.0));
+
+  g_totaldistance = g_totaldistance + distance;
+
+  g_preX = x1;
+  g_preY = y1;
+
+  return 0;
+}
 
 #endif
