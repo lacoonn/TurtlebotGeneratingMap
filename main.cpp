@@ -16,8 +16,14 @@ int main (int argc, char **argv)
   g_pubGeo = pub_nh.advertise<geometry_msgs::Twist>("/cmd_vel_mux/input/teleop",1000);
 
   ros::Rate rate(1000);
-
+    srand(time(NULL));
   double limit_distance = distancelimit();
+
+  pthread_t p_thread;
+  int thr_id;
+  int status;
+  int a=0;
+  thr_id = pthread_create(&p_thread, NULL, turtlebotmap, (void*)&a);
 
   while(g_totaldistance <= limit_distance)
   {
@@ -25,8 +31,7 @@ int main (int argc, char **argv)
 
     rate.sleep();
 
-    randomMove();
-
+    turtlebotMove();
   }
 
   return 0;

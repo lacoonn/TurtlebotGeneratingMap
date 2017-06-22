@@ -1,45 +1,16 @@
-#include <ros/ros.h>
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#include <cv_bridge/cv_bridge.h>
-#include <iomanip>
-#include <boost/thread/mutex.hpp>
-#include <sensor_msgs/LaserScan.h>
-#include <nav_msgs/OccupancyGrid.h>
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <nav_msgs/Odometry.h>
-#include <tf/transform_listener.h>
-
+#include "header.h"
 
 using namespace cv;
 using namespace std;
 
-
-///////////////////////////////////Macro///////////////////////////////////////////////////////////////////////////////////////////
 #define toRadian(degree)	((degree) * (M_PI / 180.))
 #define toDegree(radian)	((radian) * (180. / M_PI))
 #define ROWS 800
 #define COLS 800
 
-
-
-/////////////////////////////////////Global variable/////////////////////////////////////////////////////////////////////////////////////////
-// mutex[0] ==> g_odom
-// mutex[1] ==> g_scan
-// mutex[2] ==> g_grid
-static boost::mutex mutex[3];
-static nav_msgs::Odometry g_odom;
-static sensor_msgs::LaserScan g_scan;
-static nav_msgs::OccupancyGrid g_grid;
-static Mat display;
 static double ENLARGEMENT = 1;
+static Mat display;
 
-
-
-
-////////////////////////////////////A template method to check 'nan'//////////////////////////////////////////////////////////////////////////////////////////
 template<typename T>
 inline bool isnan(T value)
 {
@@ -55,36 +26,6 @@ int getBigger(int a, int b)
 		return a;
 }
 
-
-
-//////////////////////////////////////callback function////////////////////////////////////////////////////////////////////////////////////////
-void odomMsgCallback(const nav_msgs::Odometry &msg)
-{
-  // receive a '/odom' message with the mutex
-  mutex[0].lock(); {
-    g_odom = msg;
-  } mutex[0].unlock();
-}
-
-
-///////////////////////////////////callback function///////////////////////////////////////////////////////////////////////////////////////////
-void scanMsgCallback(const sensor_msgs::LaserScan& msg)
-{
-  // receive a '/odom' message with the mutex
-  mutex[1].lock(); {
-    g_scan = msg;
-  } mutex[1].unlock();
-}
-
-///////////////////////////////////callback function///////////////////////////////////////////////////////////////////////////////////////////
-void occupancyGrid_Callback(const nav_msgs::OccupancyGrid grid)
-{
-  // receive a '/odom' message with the mutex
-  mutex[2].lock(); {
-    g_grid = grid;
-  } mutex[2].unlock();
-}
-
 void drawOccupancyGrid(Mat &display)
 {
 	nav_msgs::OccupancyGrid grid;
@@ -93,7 +34,7 @@ void drawOccupancyGrid(Mat &display)
 	odom = g_odom;
 	} mutex[0].unlock();
 	mutex[2].lock(); {
-	grid = g_grid;
+	grid = g_map;
 	} mutex[2].unlock();
 
   	int width = grid.info.width;
@@ -107,8 +48,8 @@ void drawOccupancyGrid(Mat &display)
   	* mX = X * cos(radian) - Y * sin(radian)
 	* mY = X * sin(radian) + Y * cos(radian)
   	*/
-  	int turtlebot_x = (g_odom.pose.pose.position.x - map_origin_x) / g_grid.info.resolution * cos(map_origin_angle) - (g_odom.pose.pose.position.y - map_origin_y) / g_grid.info.resolution * sin(map_origin_angle);
-  	int turtlebot_y = (g_odom.pose.pose.position.x - map_origin_x) / g_grid.info.resolution * sin(map_origin_angle) + (g_odom.pose.pose.position.y - map_origin_y) / g_grid.info.resolution * cos(map_origin_angle);
+  	int turtlebot_x = (g_odom.pose.pose.position.x - map_origin_x) / g_map.info.resolution * cos(map_origin_angle) - (g_odom.pose.pose.position.y - map_origin_y) / g_map.info.resolution * sin(map_origin_angle);
+  	int turtlebot_y = (g_odom.pose.pose.position.x - map_origin_x) / g_map.info.resolution * sin(map_origin_angle) + (g_odom.pose.pose.position.y - map_origin_y) / g_map.info.resolution * cos(map_origin_angle);
   	//int turtlebot_x = (odom.pose.pose.position.x - map_origin_x) / grid.info.resolution * sin(map_origin_angle) + (odom.pose.pose.position.y - map_origin_y) / grid.info.resolution * cos(map_origin_angle);
   	//int turtlebot_y = (odom.pose.pose.position.x - map_origin_x) / grid.info.resolution * cos(map_origin_angle) - (odom.pose.pose.position.y - map_origin_y) / grid.info.resolution * sin(map_origin_angle);
 	//cout << "odom.position.x: " << setw(2) << setfill('0') << odom.pose.pose.position.x << ", odom.position.y: " << setw(2) << setfill('0') << odom.pose.pose.position.y << endl;
@@ -116,10 +57,11 @@ void drawOccupancyGrid(Mat &display)
   	//Vec2i imageHalfSize = Vec2i(display.cols/2, display.rows/2);
 
   	//int nSize = (int) trajectory.size();
-  	
+
   	// width, height 중 큰 값을 통해서 확대율을 정한다
-  	ENLARGEMENT = ROWS / (double)getBigger(height, width);
-  	cout << "height: " << height << ", width: " << width << ", ENLARGEMENT: " << setw(2) << setfill('0') << ENLARGEMENT << endl;
+	if(height > 0 || width > 0)
+  		ENLARGEMENT = ROWS / (double)(getBigger(height, width));
+  	//cout << "height: " << height << ", width: " << width << ", ENLARGEMENT: " << setw(2) << setfill('0') << ENLARGEMENT << endl;
 
   	for(int y = 0; y < height; y++) {
     	for(int x = 0; x < width; x++) {
@@ -132,10 +74,12 @@ void drawOccupancyGrid(Mat &display)
       		}
     	}
   	}
-  	cout << "HERE????????????????????????????????????????????????????????????????????????" << endl;
   	// Current Turtlebot's Position
   	//circle(display, Point((int)(turtlebot_x * ENLARGEMENT), (int)(turtlebot_y * ENLARGEMENT)), (int)(5 * ENLARGEMENT), CV_RGB(0, 0, 255), 1, CV_AA);
-  	cout << "HERE????????????????????????????????????????????????????????????????????????" << endl;
+	int radius = 5;
+	//cout << "radius * ENLARGEMENT: " << radius * ENLARGEMENT << endl;
+	circle(display, Point((int)(turtlebot_x * ENLARGEMENT), (int)(turtlebot_y * ENLARGEMENT)), (int)(radius * ENLARGEMENT), CV_RGB(0, 0, 255));
+
   	// Viewing Direction of Turtlebot
   	double turtlebot_angle = atan2(2 * odom.pose.pose.orientation.w * odom.pose.pose.orientation.z, 1 - 2 * pow(odom.pose.pose.orientation.z, 2));
   	double map_turtlebot_angle = turtlebot_angle + map_origin_angle;
@@ -158,16 +102,9 @@ void drawOccupancyGrid(Mat &display)
 		*/
 }
 
-int main(int argc, char **argv)
+void *turtlebotmap(void *data)
 {
-	ros::init(argc, argv, "turtlebot_map");
-  	ros::NodeHandle n;
-
-  	ros::Subscriber sub = n.subscribe("map", 131072, occupancyGrid_Callback);
-  	ros::Subscriber subOdom = n.subscribe("/odom", 100, &odomMsgCallback);
-
-	//initGrid(display, 1600);
-	display = Mat::zeros(800, 800, CV_8UC3);
+	 display = Mat::zeros(800, 800, CV_8UC3);
   	//display = cv::Mat(1, 1, CV_8UC1, cv::Scalar(0)); // init :: gray image
 
   	while(ros::ok()){
@@ -177,6 +114,4 @@ int main(int argc, char **argv)
     	cv::imshow("Map", display);
     	cv::waitKey(30);
   	}
-
-  	return 0;
 }
