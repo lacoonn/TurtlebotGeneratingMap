@@ -28,8 +28,11 @@
 #include <turtlebot_actions/TurtlebotMoveAction.h>
 #include <actionlib/client/simple_action_client.h>
 
-#define ANGLE_COUNT 200
-//using by depthCheck_depth
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <tf/transform_listener.h>
+#include <pthread.h>
 
 boost::mutex mutex[5];
 //0 - nav_msgs::Odometry msg  /odom
@@ -56,8 +59,6 @@ ros::Subscriber g_subScan;
 
 ros::Publisher g_pubGeo;
 
-
-
 void odomMsgCallback(const nav_msgs::Odometry &msg);
 void occupancyGrid_Callback(const nav_msgs::OccupancyGrid &msg);
 void poseMessageReceivedRGB(const sensor_msgs::Image& msg);
@@ -68,6 +69,7 @@ double distancelimit();
 int depthCheck_depth();
 int randomMove();
 int calc_distance();
+void *turtlebotmap(void *data);
 
 void odomMsgCallback(const nav_msgs::Odometry &msg)
 {
@@ -99,132 +101,18 @@ void scanMsgCallback(const sensor_msgs::LaserScan& msg)
         g_scan = msg;
     } mutex[4].unlock();
 }
-
 void error_Handle(std::string message)
 {
   std::cout << message << std::endl;
   exit(1);
 }
 
-double distancelimit() //거리입력
-{
-    double return_value = 0;
+#include "distancelimit.cpp"
+#include "gothisAngle.cpp"  //test Angle value;
+#include "calcDistance.cpp"
+#include "depthCheck.cpp"
+#include "turtlebotmap.cpp"
+#include "turtlebotMove.cpp"
 
-    std::cout << "Input exit distance (>1 Meter) : ";
-    std::cin >> return_value;
-
-    if(return_value < 1)
-    {
-      std::string message = "input_error";
-      error_Handle(message);
-    }
-
-    return return_value;
-}
-
-int depthCheck_depth()  //1 is block , 0 is nonblock
-{
-  int blockandnonblock=0; //0: block, 1:nonblock
-  sensor_msgs::LaserScan msg;
-
-  mutex[4].lock(); {
-     msg = g_scan;
-  } mutex[4].unlock();
-
-  int size_ranges_index = msg.ranges.size();
-  int size_ranges_index_divide = size_ranges_index/2;
-
-  for(int i = 0;i<ANGLE_COUNT;i++)
-  {
-    if(msg.ranges[size_ranges_index_divide+i]<1)
-    {
-      blockandnonblock = 1;
-    }
-  }
-
-  for(int i = 0;i<ANGLE_COUNT;i++)
-  {
-    if(msg.ranges[size_ranges_index_divide-i]<1)
-    {
-      blockandnonblock = 1;
-    }
-  }
-
-  return blockandnonblock;
-}
-
-int randomMove()
-{
-  geometry_msgs::Twist geo_msg;
-
-  if(depthCheck_depth())  //장애물 있을 때.
-  {
-    nav_msgs::Odometry msg;
-
-  //  while(1)
-    //{
-      mutex[0].lock(); {
-         msg = g_odom;
-      } mutex[0].unlock();
-
-      double angle = atan2((2*msg.pose.pose.orientation.w*msg.pose.pose.orientation.z),(1-2*msg.pose.pose.orientation.z*msg.pose.pose.orientation.z));
-
-      geo_msg.linear.x = 0;
-      geo_msg.angular.z = 1;
-      g_pubGeo.publish(geo_msg);
-
-      calc_distance();
-      /*
-      if(angle == ??)
-      {
-        break;
-      }
-
-      if(>)
-      {
-  		  geo_msg.linear.x = 0;
-  		  geo_msg.angular.z = 0.5;
-        g_pubGeo.publish(geo_msg);
-      }
-      else if(<)
-      {
-        geo_msg.linear.x = 0;
-  		  geo_msg.angular.z = -0.5;
-        g_pubGeo.publish(geo_msg);
-      }
-      */
-    //}
-  }
-  else  //장애물 없을 때.
-  {
-    geo_msg.linear.x = 0.5;
-    geo_msg.angular.z = 0;
-    g_pubGeo.publish(geo_msg);
-  }
-
-  return 0;
-}
-
-int calc_distance()
-{
-  nav_msgs::Odometry msg;
-  double x1,y1;
-
-  mutex[0].lock(); {
-     msg = g_odom;
-  } mutex[0].unlock();
-
-  x1 = msg.pose.pose.position.x;
-	y1 = msg.pose.pose.position.y;
-
-  double distance = sqrt(pow((x1-g_preX),2.0)+pow((y1-g_preY),2.0));
-
-  g_totaldistance = g_totaldistance + distance;
-
-  g_preX = x1;
-  g_preY = y1;
-
-  return 0;
-}
 
 #endif
