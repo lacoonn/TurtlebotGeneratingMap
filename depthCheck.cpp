@@ -16,7 +16,7 @@ int depthCheck_depth()  //1 is block , 0 is nonblock
 
   for(int i = 0;i<ANGLE_COUNT;i++)
   {
-    if(msg.ranges[size_ranges_index_divide+i]<1)
+    if(msg.ranges[size_ranges_index_divide+i]<0.7)
     {
       blockandnonblock = 1;
     }
@@ -24,7 +24,7 @@ int depthCheck_depth()  //1 is block , 0 is nonblock
 
   for(int i = 0;i<ANGLE_COUNT;i++)
   {
-    if(msg.ranges[size_ranges_index_divide-i]<1)
+    if(msg.ranges[size_ranges_index_divide-i]<0.7)
     {
       blockandnonblock = 1;
     }

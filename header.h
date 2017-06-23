@@ -70,6 +70,7 @@ int depthCheck_depth();
 int randomMove();
 int calc_distance();
 void *turtlebotmap(void *data);
+void SelectDirection(double &returnX, double &returnY, double &returnRadian);
 
 void odomMsgCallback(const nav_msgs::Odometry &msg)
 {
@@ -114,5 +115,6 @@ void error_Handle(std::string message)
 #include "turtlebotmap.cpp"
 #include "turtlebotMove.cpp"
 #include "select_direction.cpp"
+
 
 #endif

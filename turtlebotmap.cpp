@@ -61,7 +61,7 @@ void drawOccupancyGrid(Mat &display)
   	// width, height 중 큰 값을 통해서 확대율을 정한다
 	if(height > 0 || width > 0)
   		ENLARGEMENT = ROWS / (double)(getBigger(height, width));
-  	cout << "height: " << height << ", width: " << width << ", ENLARGEMENT: " << setw(2) << setfill('0') << ENLARGEMENT << endl;
+  	//cout << "height: " << height << ", width: " << width << ", ENLARGEMENT: " << setw(2) << setfill('0') << ENLARGEMENT << endl;
 
   	for(int y = 0; y < height; y++) {
     	for(int x = 0; x < width; x++) {

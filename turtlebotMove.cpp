@@ -23,7 +23,7 @@ int turtlebotMove()
 
       std::cout << angle << ", " << goalangle << std::endl;
 
-      if(angle<=goalangle + 0.01 &&angle>= goalangle - 0.01)
+      if(angle<=goalangle + 0.1 &&angle>= goalangle - 0.1)
       {
         break;
       }
@@ -31,13 +31,13 @@ int turtlebotMove()
       if(angle>goalangle)
       {
   		  geo_msg.linear.x = 0;
-  		  geo_msg.angular.z = -1*0.2;
+  		  geo_msg.angular.z = -1*0.5;
         g_pubGeo.publish(geo_msg);
       }
       else if(angle<goalangle)
       {
         geo_msg.linear.x = 0;
-  		  geo_msg.angular.z = 0.2;
+  		  geo_msg.angular.z = 0.5;
         g_pubGeo.publish(geo_msg);
       }
 
@@ -45,7 +45,7 @@ int turtlebotMove()
   }
   else  //장애물 없을 때.
   {
-    geo_msg.linear.x = 0.3;
+    geo_msg.linear.x = 0.2;
     geo_msg.angular.z = 0;
     g_pubGeo.publish(geo_msg);
   }
