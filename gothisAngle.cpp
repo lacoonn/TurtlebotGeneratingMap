@@ -2,6 +2,7 @@
 
 double dothisAngle()
 {
+	/*
   double rand_num;
   int plusminus;
 
@@ -16,4 +17,9 @@ double dothisAngle()
   }
 
   return rand_num;
+  */
+  double x, y, radian;
+  SelectDirection(x, y, radian);
+
+  return radian;
 }
