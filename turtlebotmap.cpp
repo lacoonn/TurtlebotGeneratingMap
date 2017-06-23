@@ -113,5 +113,7 @@ void *turtlebotmap(void *data)
     	drawOccupancyGrid(display);
     	cv::imshow("Map", display);
     	cv::waitKey(30);
+		if(isKill)
+			break;
   	}
 }

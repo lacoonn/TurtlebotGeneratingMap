@@ -20,6 +20,7 @@
 #include <sensor_msgs/LaserScan.h>
 #include <sensor_msgs/Image.h>
 #include <geometry_msgs/Twist.h>
+#include <signal.h>
 
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
@@ -41,6 +42,7 @@ boost::mutex mutex[5];
 //3 - sensor_msgs::Image msg  /camera/depth_registered/image_raw
 //4 - sensor_msgs::LaserScan g_scan
 
+bool isKill = false;
 nav_msgs::Odometry g_odom;
 nav_msgs::OccupancyGrid g_map;
 sensor_msgs::Image g_rgb;

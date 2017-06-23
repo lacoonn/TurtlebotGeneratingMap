@@ -1,7 +1,15 @@
 #include "header.h"
 
+void handler(int a)
+{
+	isKill = true;
+	//exit(1);
+}
+
 int main (int argc, char **argv)
 {
+	g_totaldistance = 0;
+
   ros::init(argc, argv, "main");
 
   ros::NodeHandle sub_nh;
@@ -18,13 +26,13 @@ int main (int argc, char **argv)
   ros::Rate rate(1000);
     srand(time(NULL));
   double limit_distance = distancelimit();
-
   pthread_t p_thread;
   int thr_id;
   int status;
   int a=0;
   thr_id = pthread_create(&p_thread, NULL, turtlebotmap, (void*)&a);
 
+	signal(SIGINT, handler);
   while(g_totaldistance <= limit_distance)
   {
     ros::spinOnce();
@@ -32,7 +40,12 @@ int main (int argc, char **argv)
     rate.sleep();
 
     turtlebotMove();
+
+	if(isKill)
+		break;
   }
+  isKill = true;
+  pthread_join(p_thread, 0);
 
   return 0;
 }

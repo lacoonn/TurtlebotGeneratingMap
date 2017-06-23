@@ -11,6 +11,12 @@ int turtlebotMove()
 
     goalangle = dothisAngle();
 
+	geo_msg.linear.x = 0;
+	geo_msg.angular.z = 0;
+  	g_pubGeo.publish(geo_msg);
+
+	calcDistance();
+
     while(1)
     {
       mutex[0].lock(); {
@@ -19,9 +25,9 @@ int turtlebotMove()
 
       double angle = atan2((2*msg.pose.pose.orientation.w*msg.pose.pose.orientation.z),(1-2*msg.pose.pose.orientation.z*msg.pose.pose.orientation.z));
 
-      calcDistance();
 
-      std::cout << angle << ", " << goalangle << std::endl;
+
+      //std::cout << angle << ", " << goalangle << std::endl;
 
       if(angle<=goalangle + 0.1 &&angle>= goalangle - 0.1)
       {
@@ -45,6 +51,7 @@ int turtlebotMove()
   }
   else  //장애물 없을 때.
   {
+	  std::cout << "Start Straight!!!!!!!!!!!!" << endl;
     geo_msg.linear.x = 0.2;
     geo_msg.angular.z = 0;
     g_pubGeo.publish(geo_msg);
