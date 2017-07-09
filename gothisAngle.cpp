@@ -18,10 +18,10 @@ double dothisAngle()
 
   return rand_num;
 */
+	double x, y, radian;
+	SelectDirection(x, y, radian);
+	std::cout << "Direction => X: " << x << ", Y: " << y << std::endl;
 
-  double x, y, radian;
-  SelectDirection(x, y, radian);
-
-  return radian;
+  	return radian;
 
 }

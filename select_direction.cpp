@@ -32,12 +32,13 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 	nav_msgs::OccupancyGrid grid;
 	nav_msgs::Odometry odom;
 
-	mutex[0].lock(); {
+	mutex[0].lock();
 	odom = g_odom;
-	} mutex[0].unlock();
-	mutex[1].lock(); {
+	mutex[0].unlock();
+
+	mutex[1].lock();
 	grid = g_map;
-	} mutex[1].unlock();
+	mutex[1].unlock();
 
 
   	int width = grid.info.width;
@@ -83,7 +84,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if (tempMap[turtlebot_y - i][turtlebot_x] < 0)
 			dv[0].value++;
-		dv[0].value++;
+		//dv[0].value++;
 	}
 	// up-right
 	for(int i = 0; turtlebot_y - i >= 0 && turtlebot_x + i < width; i++) {
@@ -94,7 +95,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		if(tempMap[turtlebot_y - i][turtlebot_x + i] < 0)
 			dv[1].value++;
-		dv[1].value++;
+		//dv[1].value++;
 	}
 	// right
 	for(int i = 0; turtlebot_x + i < width; i++) {
@@ -105,7 +106,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y][turtlebot_x + i] < 0)
 			dv[2].value++;
-		dv[2].value++;
+		//dv[2].value++;
 	}
 	// right-down
 	for(int i = 0; turtlebot_x + i < width && turtlebot_y + i < height; i++) {
@@ -116,7 +117,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y + i][turtlebot_x + i] < 0)
 			dv[3].value++;
-		dv[3].value++;
+		//dv[3].value++;
 	}
 	// down
 	for(int i = 0; turtlebot_y + i < height; i++) {
@@ -127,7 +128,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y + i][turtlebot_x] < 0)
 			dv[4].value++;
-		dv[4].value++;
+		//dv[4].value++;
 	}
 	// down-left
 	for(int i = 0; turtlebot_y + i < height && turtlebot_x - i >= 0; i++) {
@@ -138,7 +139,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y + i][turtlebot_x - i] < 0)
 			dv[5].value++;
-		dv[5].value++;
+		//dv[5].value++;
 	}
 	// left
 	for(int i = 0; turtlebot_x - i >= 0; i++) {
@@ -149,7 +150,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y][turtlebot_x - i] < 0)
 			dv[6].value++;
-		dv[6].value++;
+		//dv[6].value++;
 	}
 	// left-up
 	for(int i = 0; turtlebot_x - i >= 0 && turtlebot_y - i >= 0; i++) {
@@ -160,7 +161,7 @@ void SelectDirection(double &returnX, double &returnY, double &returnRadian)
 		}
 		else if(tempMap[turtlebot_y - i][turtlebot_x - i] < 0)
 			dv[7].value++;
-		dv[7].value++;
+		//dv[7].value++;
 	}
 
 	// 각 방향 중 가장 가치가 높은(검은색이 많고 장애물이 멀리 있는) 방향을 고른다
